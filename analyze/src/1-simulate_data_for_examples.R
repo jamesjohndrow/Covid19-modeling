@@ -1,8 +1,8 @@
 #!/usr/bin/env Rscript --vanilla
 # set expandtab ts=4 sw=4 ai fileencoding=utf-8
 #
-# Author: PB
-# Maintainer(s): PB
+# Author: KL
+# Maintainer(s): JJ, MG, PB
 # License: (c) HRDAG 2020, GPL v2 or newer
 #
 # -----------------------------------------------------------
