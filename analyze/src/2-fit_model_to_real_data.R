@@ -12,18 +12,20 @@ pacman::p_load(ggplot2, dplyr, tidyr, readr, lubridate,
                future, future.apply, here, glue, argparse)
 
 parser <- ArgumentParser()
-parser$add_argument('--functions' default='analyze/src/functions.R')
-parser$add_argument('--theta', default='analyze/output/theta.Rds')
-parser$add_argument('--pops', default='analyze/input/country_pops.RData')
-parser$add_argument('--worldometers', default='analyze/input/worldounts_deaths_us.csv')
+parser$add_argument('--functions', default=here::here('analyze/src/functions.R'))
+parser$add_argument('--theta', default=here::here('analyze/output/theta.Rds'))
+parser$add_argument('--pops', default=here::here('analyze/input/country_pops.RData'))
+parser$add_argument('--worldometers', default=here::here('analyze/input/worldounts_deaths_us.csv'))
+parser$add_argument('--p', default=0.01)
+parsre$add_argument('--country', default='us')
 
 args <- parser$parse_args()
 
-args[['mcmc_stub']] <- 'analyze/output/mcmc_run_'
-args[['bigDs_stub']] <- 'analyze/output/bigDs_'
-args[['big_Nus_stub']] <- 'analyze/output/bigNus'
+args[['mcmc']] <- here::here(glue('analyze/output/mcmc_run_{p}.RData'))
+args[['bigDs']] <- here::here(glue('analyze/output/bigDs_{p}.RData'))
+args[['bigNus']] <- here::here(glue('analyze/output/bigNus_{p}.RData'))
 
-source(here::here(args$functions))
+source(args$functions)
 
 ##----- set up
 p <- 0.01 # the IFR. This is an input/assumption of the model.
@@ -31,9 +33,9 @@ R0.case <- seq(from=0.75, to=2.25, by=0.25) #different R0 cases to consider
 n.cases <- length(R0.case)
 
 #read in values for theta (time to death distribution as calculated in previous setup script)
-theta <- readRDS(here::here(args$theta))
+theta <- readRDS(args$theta)
 #read in population size data
-pops <- readRDS(here::here(args$pops))
+pops <- readRDS(args$pops)
 
 
 #maximum days until death (minus one because 0 days is allowed)
@@ -52,7 +54,7 @@ thinned <- round(seq(burn, nmc, length.out=n.thin))
 disp.int <- 1000
 
 # worldometers data entered manually from website
-dat <- read_csv(here::here(args$worldometers))
+dat <- read_csv(args$worldometers)
 dat <- dat %>% mutate(date=mdy(date))
 Ds <- dat$deaths_us
 Ds <- c(rep(0, 14), Ds) #add on some extra 0's to the front so that if the model wants to it can estimate an earlier first infection date
@@ -91,15 +93,19 @@ mcmc.out <- run.mcmc(nmc=nmc, theta=theta, beta=beta, gammar=gammar, T=T, I=I,
                      zeta.T0=c(1, 30))
 
 ##save output here from running mcmc
-save(file=paste('output/mcmc_run_', p ,'.RData', sep=''), mcmc.out)
-
-save(file=glue('{args$mcmc_stub}{p}.RData', mcmc.out)
+save(file=args$mcmc, mcmc.out)
 
 ##post-process MCMC output to be more easily plotted.... in next script (this takes a while to run, like the mcmc)
-## NOTE TO MG, PB: THIS PART COULD USE SOME CLEAN-UP BELOW. JUST LOAD THE MCMC OUTPUT TO START HERE, SO YOU DON'T HAVE TO RE-RUN THE MCMC. IT'S KIND OF SLOW.
 NUS <- mcmc.out$NUS
-tmp <- simulate.sir(N, mean(mcmc.out$BETA), mean(mcmc.out$GAMMAR), I, T,
-                    max.time, theta, p, floor(mean(mcmc.out$T0S)))
+tmp <- simulate.sir(N,
+                    mean(mcmc.out$BETA), 
+                    mean(mcmc.out$GAMMAR),
+                    I, 
+                    T,
+                    max.time, 
+                    theta, 
+                    p, 
+                    floor(mean(mcmc.out$T0S)))
 plot(tmp$Ds[1:T], Ds)
 abline(0, 1)
 
@@ -118,14 +124,26 @@ plan(multisession)
 BGt <- split(cbind(BETA.thinned, GAMMAR.thinned, T0.thinned), seq(1:n.thin))
 
 #for each mcmc sample simulate sir model under those model parameters; times are integers so use T0 as floor of estimated  T0,
-tmp1 <- future_lapply(BGt, function(x){simulate.sir(N, x[1], x[2], I, 
-                                                    T + n.days.future, max.time,
-                                                    theta, p, floor(x[3]))})
+tmp1 <- future_lapply(BGt, function(x){simulate.sir(N, 
+                                                    x[1], 
+                                                    x[2], 
+                                                    I, 
+                                                    T + n.days.future, 
+                                                    max.time,
+                                                    theta, 
+                                                    p, 
+                                                    floor(x[3]))})
 
 #for each mcmc sample simulate sir model under those model parameters; times are integers so use T0 as ceiling of estimated  T0,
-tmp2 <- future_lapply(BGt, function(x){simulate.sir(N, x[1], x[2], I,
-                                                    T + n.days.future, max.time,
-                                                    theta, p, ceiling(x[3]))})
+tmp2 <- future_lapply(BGt, function(x){simulate.sir(N, 
+                                                    x[1], 
+                                                    x[2], 
+                                                    I,
+                                                    T + n.days.future, 
+                                                    max.time,
+                                                    theta, 
+                                                    p, 
+                                                    ceiling(x[3]))})
 
 #extract the samples of number of deaths under this model
 tmp01 <- sapply(tmp1, function(x){return(x$Ds[1:(T + n.days.future)])})
@@ -148,18 +166,30 @@ for (k in 1:n.cases) {
   tmp1 <- future_lapply(BGt, function(x){simulate.sir(N, 
                                                       c(rep(x[1], T - days.since.mitigation),
                                                         rep(x[2], days.since.mitigation + n.days.future) * R0.case[k]), #sample SIR as  though the R0 decreased by R0.case[k] days.since.mitigation ago
-                                                        x[2], I, T + n.days.future, max.time, theta, p, floor(x[3]))})
+                                                      x[2], 
+                                                      I, 
+                                                      T + n.days.future, 
+                                                      max.time, 
+                                                      theta, 
+                                                      p, 
+                                                      floor(x[3]))})
   tmp2 <- future_lapply(BGt, function(x){simulate.sir(N,
                                                       c(rep(x[1], T - days.since.mitigation),
                                                         rep(x[2], days.since.mitigation + n.days.future) * R0.case[k]),
-                                                     x[2], I, T + n.days.future, max.time, theta, p, ceiling(x[3]))})
-
+                                                      x[2], 
+                                                      I, 
+                                                      T + n.days.future, 
+                                                      max.time, 
+                                                      theta, 
+                                                      p, 
+                                                      ceiling(x[3]))})
+  
   #extract samples of deaths
   tmp01 <- sapply(tmp1, function(x){return(x$Ds[1:(T + n.days.future)])})
   tmp02 <- sapply(tmp2, function(x){return(x$Ds[1:(T + n.days.future)])})
   big.Ds[,,k] <- (tmp01 * (T0.thinned - floor(T0.thinned)) 
                   + tmp02 * (ceiling(T0.thinned) - T0.thinned))
-
+  
   #extract Nus
   tmp01 <- sapply(tmp1, function(x){return(x$Nus)})
   tmp02 <- sapply(tmp2, function(x){return(x$Nus)})
@@ -167,7 +197,7 @@ for (k in 1:n.cases) {
                    + tmp02 * (ceiling(T0.thinned) - T0.thinned))
 }
 
-save(file=glue("{args$bigDs_stub}{p}.RData"), big.Ds)
-save(file=glue("{args$bigNus_stub}{p}.RData"), big.Nus)
+save(file=args$bigDs, big.Ds)
+save(file=args$bigNus, big.Nus)
 
 # done.

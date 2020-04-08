@@ -11,38 +11,39 @@ pacman::p_load(ggplot2, dplyr, tidyr, readr, lubridate,
                future, future.apply, reshape2, here)
 
 parser <- ArgumentParser()
-parser$add_argument('--functions' default='analyze/src/functions.R')
-parser$add_argument('--theta', default='analyze/output/theta.Rds')
-parser$add_argument('--pops', default='analyze/input/country_pops.RData')
-parser$add_argument('--worldometers', default='analyze/input/worldounts_deaths_us.csv')
+parser$add_argument('--functions', default=here::here('analyze/src/functions.R'))
+parser$add_argument('--theta', default=here::here('analyze/output/theta.Rds'))
+parser$add_argument('--pops', default=here::here('analyze/input/country_pops.RData'))
+parser$add_argument('--worldometers', default=here::here('analyze/input/worldounts_deaths_us.csv'))
+parser$add_argument('--p', default=0.01)
+parsre$add_argument('--country', default='us')
 
 args <- parser$parse_args()
 
-args[['mcmc_stub']] <- 'analyze/output/mcmc_run_'
-args[['trace_plots_stub']] <- 'analyze/output/trace_plots_fractional_'
-args[['post_hists_stub']] <- 'analyze/output/post_hists_fractional_'
-args[['bigDs_stub']] <- 'analyze/output/bigDs_'
-args[['big_Nus_stub']] <- 'analyze/output/bigNus'
-args[['num_deaths_cases_stub']] <- 'analyze/output/num_deaths_cases_fractional_'
-args[['num_newly_infected_stub']] <- 'analyze/output/num_newly_infected_cases_fractional_'
-args[['predicted_vs_actual_stub']] <- 'analyze/output/Predicted_vs_actual_fractional_'
-args[['R0_stub']] <- 'analyze/output/R0_fractional_'
-args[['infected_10_stub']] <- 'analyze/output/infected_10_days_ago_fractional_'
-args[['newly_infected_10_stub']] <- 'analyze/output/newly_infected_10_days_ago_fractional_'
-args[['time_to_recovery_stub']] <- 'analyze/output/time_to_recovery_fractional_'
+args[['mcmc']] <- here::here(glue('analyze/output/mcmc_run_{p}.Rdata'))
+args[['trace_plots']] <- here::here(glue('analyze/output/trace_plots_fractional_{country}_{p}.png'))
+args[['post_hists']] <- here::here(glue('analyze/output/post_hists_fractional_{country}_{p}.png'))
+args[['bigDs']] <- here::here(glue('analyze/output/bigDs_{p}'))
+args[['bigNus']] <- here::here(glue('analyze/output/bigNus_{p}'))
+args[['num_deaths_cases']] <- here::here(glue('analyze/output/num_deaths_cases_fractional_{country}_{p}.png'))
+args[['num_newly_infected']] <- here::here(glue('analyze/output/num_newly_infected_cases_fractional_{country}_{p}.png'))
+args[['predicted_vs_actual']] <- here::here(glue('analyze/output/Predicted_vs_actual_fractional_{country}_{p}.png'))
+args[['R0']] <- here::here(glue('analyze/output/R0_fractional_{country}_{p}.png'))
+args[['infected_10']] <- here::here(glue('analyze/output/infected_10_days_ago_fractional_{country}_{p}.png'))
+args[['newly_infected_10']] <- here::here(glue('analyze/output/newly_infected_10_days_ago_fractional_{country}_{p}.png'))
+args[['time_to_recovery']] <- here::here(glue('analyze/output/time_to_recovery_fractional_{country}_{p}.png'))
 
-source(here::here(args$functions))
+
+
+source(args$functions)
 
 ##----- set up
-country <- 'us'
-
-p <- 0.01
 R0.case <- seq(from=0.75, to=2.25, by=0.25)
 n.cases <- length(R0.case)
 
-theta <- readRDS(here::here(args$theta))
+theta <- readRDS(args$theta)
 #read in population size data
-pops <- readRDS(here::here(args$pops))
+pops <- readRDS(args$pops)
 
 max.time <- length(theta) - 1
 N <- pops[rownames(pops) == country]
@@ -54,7 +55,7 @@ n.thin <- 1000
 disp.int <- 1000
 
 # worldometers data entered manually from website
-dat <- read_csv(here::here(args$worldometers))
+dat <- read_csv(args$worldometers)
 dat <- dat %>% mutate(date=mdy(date))
 Ds <- dat$deaths_us
 Ds <- c(rep(0, 14), Ds)
@@ -74,7 +75,7 @@ dt.all <- c(min(dat$date) + seq(from=-14, to=-1, by=1),
 T <- length(Ds)
 
 #load the results of the mcmc
-load(file=here::here(glue("{args$mcmc_stub}{p}.RData")))
+load(args$mcmc)
 
 nmc <- nrow(mcmc.out$BETA)
 thinned <- round(seq(burn, nmc, length.out=n.thin))
@@ -85,30 +86,30 @@ df.bg <- data.frame(beta=mcmc.out$BETA,
                     T0=mcmc.out$T0S,
                     iter=seq(nmc))
 df.bg <- df.bg %>% 
-    mutate(R0=beta / gammar) %>% 
-    gather(variable, value, -iter)
+  mutate(R0=beta / gammar) %>% 
+  gather(variable, value, -iter)
 
-png(glue('{args$trace_plots_stub}{country}_{p_str}.png', width=600, height=400)
+png(args$trace_plots, width=600, height=400)
 ggplot(df.bg, aes(x=iter, y=value)) + 
-    geom_point(size=0.4) + 
-    facet_wrap(~variable, scales='free') +
-    theme(text=element_text(size=24), axis.text.x=element_text(angle=90)) +
-    xlab("iteration") +
-    theme_bw()
+  geom_point(size=0.4) + 
+  facet_wrap(~variable, scales='free') +
+  theme(text=element_text(size=24), axis.text.x=element_text(angle=90)) +
+  xlab("iteration") +
+  theme_bw()
 dev.off()
 
 #make histograms of posterior distribution of parameters
-png(glue('{args$post_hists_stub}{country}_{p_str}.png'), with=600, height=400)
+png(args$post_hists, with=600, height=400)
 ggplot(df.bg %>% filter(iter>=burn), aes(x=value)) +
-    geom_histogram() +
-    facet_wrap(~variable, scales='free') + 
-    theme(text=element_text(size=24), axis.text.x=element_text(angle=90)) +
-    theme_bw()
+  geom_histogram() +
+  facet_wrap(~variable, scales='free') + 
+  theme(text=element_text(size=24), axis.text.x=element_text(angle=90)) +
+  theme_bw()
 dev.off()
 
 #load post-processed MCMC output
-load(file=here::here(glue('{args$bigDs_stub}{p}.RData')))
-load(file=here::here(glue('{args$bigNus_stub}{p}.RData')))
+load(file=args$bigDs)
+load(file=args$bigNus)
 
 n.days.future <- dim(big.Ds)[1] - T
 
@@ -138,20 +139,20 @@ df.qhi$day <- dt.all
 df.qhi <- df.qhi %>% gather(R0, q975, -day)
 
 df.Ds <- df.Ds %>% 
-    inner_join(df.qlo, by=c('R0', 'day')) %>%
-    inner_join(df.qhi, by=c('R0','day'))
+  inner_join(df.qlo, by=c('R0', 'day')) %>%
+  inner_join(df.qhi, by=c('R0','day'))
 df.Ds$R0 <- factor(df.Ds$R0)
 
 #plot future trajectories under different scenarios for R0
-png(glue('{num_deaths_cases_stub}{country}_{p_str}.png'), width=600, height=400)
+png(args$num_deaths_cases, width=600, height=400)
 
 ggplot(df.Ds %>% 
-       filter(day > date("2020-03-28") & day <= date("2020-03-28") + n.days.future),
+         filter(day > date("2020-03-28") & day <= date("2020-03-28") + n.days.future),
        aes(x=day, y=log10(value), col=R0)) +
   geom_line() +
   theme_bw() +
   geom_ribbon(data=df.Ds %>% 
-              filter(day > date("2020-03-28") & day <= date("2020-03-28") + n.days.future),
+                filter(day > date("2020-03-28") & day <= date("2020-03-28") + n.days.future),
               aes(ymin=log10(q025),
                   ymax=log10(q975),
                   fill=R0),
@@ -187,24 +188,24 @@ df.qhi$day <- dt.all
 df.qhi <- df.qhi %>% gather(R0, q975, -day)
 
 df.Nus <- df.Nus %>% 
-    inner_join(df.qlo, by=c('R0', 'day')) %>%
-    inner_join(df.qhi, by=c('R0', 'day'))
+  inner_join(df.qlo, by=c('R0', 'day')) %>%
+  inner_join(df.qhi, by=c('R0', 'day'))
 df.Nus <- df.Nus %>% 
-    mutate(ribbon = day > date("2020-03-20") | (R0 > 2.5 &  day > date("2020-03-15")))
+  mutate(ribbon = day > date("2020-03-20") | (R0 > 2.5 &  day > date("2020-03-15")))
 df.Nus$R0 <- factor(df.Nus$R0)
 
 #plot future new infections under different scenarios for reductions in R0
-png(glue("{args$num_newly_infected_stub}{country}_{p_str}.png"), width=600, height=400)
+png(args$num_newly_infected, width=600, height=400)
 ggplot(df.Nus %>% 
-       filter((day > date("2020-03-20") - days.since.mitigation &
-              day <= date("2020-03-29") + n.days.future)),
+         filter((day > date("2020-03-20") - days.since.mitigation &
+                   day <= date("2020-03-29") + n.days.future)),
        aes(x=day, y=log10(value+1), col=R0)) +
   geom_line() +
   theme_bw() +
   theme(text=element_text(size=24)) +
   geom_ribbon(df.Nus %>% 
-              filter((day > date("2020-03-20") - days.since.mitigation &
-                     day <= date("2020-03-29") + n.days.future)),
+                filter((day > date("2020-03-20") - days.since.mitigation &
+                          day <= date("2020-03-29") + n.days.future)),
               aes(ymin=log10(q025), ymax=log10(q975), fill=R0), alpha=0.2) +
   xlab("date") +
   ylab(expression(paste(log[10], nu)))
@@ -217,7 +218,7 @@ big.Ds <- data.frame(big.Ds)
 #big.Ds$time <- 1:T
 big.Ds$date <- dt.all[1:T]
 #big.Ds.long <- big.Ds %>% gather(variable,value,-time)  #melt(big.Ds, id.vars=c("time"))
-big.Ds.long <- melt(big.Ds, id.vars=c("date")) #for some unknown reason, gather fucks this up. just leave it as melt
+big.Ds.long <- melt(big.Ds, id.vars=c("date")) 
 big.Ds.long$alpha <- 0.05
 big.Ds.long$type <- "simulations"
 means <- data.frame(date=dt.all[1:T], 
@@ -235,7 +236,7 @@ big.Ds.long <- rbind(big.Ds.long, data)
 
 #big.Ds.long$type <- factor(big.Ds.long$type, ordered=TRUE, levels=c("simulations", "mean", "actual deaths"))
 
-png(glue("{args$predicted_vs_actual_stub}{country}_{p_str}.png"), width=800, height=500)
+png(args$predicted_vs_actual, width=800, height=500)
 ggplot(filter(big.Ds.long, date > date("2020-02-15")),
        aes(x=date, y=value, group=variable, alpha=alpha, color=type)) +
   geom_line() +
@@ -251,7 +252,7 @@ R0 <- R0 %>% mutate(iter=seq(nmc))
 
 #mean(1/mcmc.out$GAMMAR)
 
-png(glue('{args$R0_stub}{country}_{p_str}.png'), width=400, height=300)
+png(args$R0, width=400, height=300)
 ggplot(R0 %>% filter(iter > burn), aes(x=r)) +
   geom_histogram() +
   theme(text=element_text(size=24)) +
@@ -262,27 +263,27 @@ dev.off()
 df1 <- data.frame(total_infections=apply(mcmc.out$NUS[(burn + 1):nmc, 1:(T - 10)], 
                                          1, 
                                          sum))
-png(glue('{args$infected_10_stub}{country}_{p_str}.png'), width=600, height=400)
+png(args$infected_10, width=600, height=400)
 ggplot(df1, aes(x=total_infections)) + 
-    geom_histogram() + 
-    theme_bw() +
-    xlab("Infected + Recovered") +
-    theme(plot.title=element_text(hjust=0.5)) +
+  geom_histogram() + 
+  theme_bw() +
+  xlab("Infected + Recovered") +
+  theme(plot.title=element_text(hjust=0.5)) +
   theme(text=element_text(size=24))
 dev.off()
 
 df1 <- data.frame(new_infections=mcmc.out$NUS[(burn+1):nmc,T-10])
 
-png(glue("{newly_infected_10_stub}{country}_{p_str}.png"), width=600, height=400)
+png(args$newly_infected_10, width=600, height=400)
 ggplot(df1, aes(x=new_infections)) +
-    geom_histogram() + 
-    theme_bw() +
-    xlab("New Infected") +
-    theme(plot.title=element_text(hjust=0.5)) +
-    theme(text=element_text(size=24))
+  geom_histogram() + 
+  theme_bw() +
+  xlab("New Infected") +
+  theme(plot.title=element_text(hjust=0.5)) +
+  theme(text=element_text(size=24))
 dev.off()
 
-png(glue('{args$time_to_recover_stub}{country}_{p_str}.png'), width=600, hieght=400)
+png(args$time_to_recovery, width=600, hieght=400)
 hist(1 / mcmc.out$GAMMAR[(burn+1):nmc],
      main='posterior distribution of \n average length of the infectious period',
      xlab=expression(gamma[r]^(-1)))
@@ -291,8 +292,8 @@ dev.off()
 quantile(R0$r[R0$iter > burn], c(0.025, 0.975))
 
 df.Ds %>% 
-    filter(day %in% c(date("2020-03-29"), date("2020-03-30"), date("2020-03-31"))) %>% 
-    group_by(day) %>% 
-    summarise(mn.deaths=mean(value))
+  filter(day %in% c(date("2020-03-29"), date("2020-03-30"), date("2020-03-31"))) %>% 
+  group_by(day) %>% 
+  summarise(mn.deaths=mean(value))
 
 # done.

@@ -8,8 +8,8 @@
 if (!require('pacman')) {install.packages('pacman')}
 pacman::p_load(here)
 
-args <- list(theta_plot='analyze/output/theta.png',
-             theta='analyze/output/theta.Rds')
+args <- list(theta_plot=here::here('analyze/output/theta.png'),
+             theta=here::here('analyze/output/theta.Rds'))
 
 #The median time from illness onset ... to death was 18·5 days (15·0–22·0; table 2). 15-22 is IQR
 #onset.to.death <- rbinom(100000, 122, 0.157)
@@ -34,10 +34,10 @@ max.time <- quantile(samps, prob=0.99) - 1
 theta <- table(c(samps, 0:max.time))[0:max.time + 1]
 theta <- theta / sum(theta)
 
-png(here::here(args$theta_plot), width=500, height=400)
+png(args$theta_plot, width=500, height=400)
 plot(theta, xlab="T", ylab="probability", cex.axis=1.5, cex.lab=1.5)
 dev.off()
 
-saveRDS(theta, file=here::here(args$theta))
+saveRDS(theta, file=args$theta)
 
 # done.
