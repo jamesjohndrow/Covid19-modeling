@@ -12,7 +12,7 @@
 
 
 if (!require('pacman')) {install.packages('pacman')}
-p_load(ggplot2, tidyr, dplyr)
+p_load(ggplot2, tidyr, stringr, dplyr)
 stopifnot(str_ends(getwd(), "Covid19-modeling/analyze"))
 
 files <- list(funcs = "src/functions.R",
