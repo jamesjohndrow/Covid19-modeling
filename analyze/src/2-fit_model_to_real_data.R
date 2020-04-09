@@ -1,12 +1,11 @@
 #
-# Authors:     KL
-# Maintainers: JJ, PB, MG
+# Authors: JJ,  KL
+# Maintainers: PB, MG
 # Copyright:
 # =========================================
 # Covid19-modeling/analyze/src/2-fit_model_to_real_data.R
 
-#this code fits a model to the data
-
+#this code fits a model to the data.
 if (!require('pacman')) {install.packages('pacman')}
 pacman::p_load(ggplot2, dplyr, tidyr, readr, lubridate,
                future, future.apply, here, glue, argparse)
