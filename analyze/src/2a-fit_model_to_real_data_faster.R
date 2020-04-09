@@ -60,10 +60,8 @@ disp.int <- 1000
 # worldometers data entered manually from website
 dat <- read_csv('./input/worldcounts_deaths_us.csv')
 dat <- dat %>% mutate(date=mdy(date))
-eval(parse(text=paste("Ds <- dat$deaths_",country,sep="")))
-if (country=='us') {Ds <- c(rep(0,14),Ds)}
-if (country=='it') {Ds <- c(rep(0,12),Ds)}
-if (country=='fr') {Ds <- c(rep(0,4),Ds)}
+Ds <- dat$deaths_us
+Ds <- c(rep(0,14),Ds)
 
 
 # In a "normal" SIR model, the R0 is beta/gamma
@@ -83,6 +81,10 @@ I <- 1/N
 
 #time of first infection
 T0 <- 15
+
+# cases to consider for percent decrease in R0
+per_decrease <- seq(from=0,to=0.8,by=0.1)
+n.cases <- length(per_decrease)
 
 
 ##----- run mcmc
@@ -113,7 +115,7 @@ mcmc.out <- run.mcmc(nmc=nmc,theta=theta,beta=beta,gammar=gammar, T=T,I=I,Ds=Ds,
                      k.adapt=5000,c0=c(0.01^2,0.01^2,0.75^2),c1=0.5*(2.38/3),T0=T0,zeta.T0 = c(1,30))
 
 
-save(file=paste('output/mcmc_run_fractional_fast_',country,'_',p_str,'.RData',sep=''),mcmc.out)
+save(file=paste('output/mcmc_run_',p,'.RData',sep=''),mcmc.out)
 
 thinned <- seq(burn, nmc, length.out = n.thin)
 
@@ -159,5 +161,5 @@ for (j in 1:n.cases) {
 plot(big.Ds[,1,6])
 
 
-save(file=paste('output/bigDs_fractional_faster_',country,'_',p_str,'.RData',sep=''),big.Ds)
-save(file=paste('output/bigNus_fractional_faster_',country,'_',p_str,'.RData',sep=''),big.Nus)
+save(file=paste('output/bigDs_',p,'.RData',sep=''),big.Ds)
+save(file=paste('output/bigNus_',p,'.RData',sep=''),big.Nus)
