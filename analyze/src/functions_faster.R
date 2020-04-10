@@ -112,25 +112,43 @@ log.T0prior <- function(x, zeta) {
 }
 
 
-simulate.sir <- function(beta, gammar, I, N, T0, T, S=NA) {
-  if (is.na(S)) {S <- 1-I}
+simulate.sir <- function(beta,gammar,I0,N,T0,T,S0=NA) {
+  if (is.na(S0)) {S0 <- 1-I0}
   
-  sim1 <- SIR(pars=list(beta=beta, gamma=gammar),
-              init=c(S=S, I=I, R=1 - S - I),
-              time=seq(from=ceiling(T0) - T0, to=T + 1, by=1))
+  integer.start <- T0==ceiling(T0)
   
-  SI0 <- as.matrix(sim1$results[,2:3])
-  SI <- matrix(0, T, 2)
-  SI[floor(T0):T,] <- SI0[1:(T - floor(T0) + 1),]
+  tms <- seq(from=ceiling(T0), to=T, by=1)
   
-  S <- sim1$results[,2] * N
-  Nus0 <- S[1:(length(S) - 1)] - S[2:length(S)]
-  Nus <- rep(0, T)
-  Nus[floor(T0):T] <- Nus0[1:(T-floor(T0) + 1)]
+  if(! integer.start){
+    tms <- c(T0, tms)
+  }
   
-  return(list(SI=SI, Nus=Nus))
+  sim1 <- SIR(pars=list(beta=beta,gamma=gammar),
+              init=c(S=S0,I=I0,R=1-S0-I0),
+              time=tms)
+  
+  
+  SI.sim <- as.matrix(sim1$results[,2:3])
+  if(!integer.start){
+    SI.sim <- SI.sim[-1,]
+  }
+  
+  SI <- t(matrix(c(1,0),2,T))
+  SI[ceiling(T0):T,] <- SI.sim
+  
+  
+  S <- SI[,1]*N
+  Nus.sim <- S[1:(length(S)-1)]-S[2:length(S)]
+  Nus <- rep(0,T)
+  Nus[2:T] <- Nus.sim
+  
+  if(!integer.start){
+    tms <- tms[-1]
+  }
+  
+  
+  return(list(SI=SI,Nus=Nus,times=tms))
 }
-
 # eliminate max.time, theta
 
 propose.sir <- function(beta, gammar, I, T, p, Nus, Ds, xi, zeta, ll.curr, SI,
