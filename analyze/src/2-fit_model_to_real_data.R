@@ -39,7 +39,7 @@ pops <- readRDS(args$pops)
 
 #maximum days until death (minus one because 0 days is allowed)
 max.time <- length(theta) - 1
-N <- pops[rownames(pops) == 'us']
+N <- pops[rownames(pops) == args$country]
 
 #how long since mitigation went into place
 days.since.mitigation <- 10
@@ -78,10 +78,12 @@ T0 <- 15
 
 ##----- run mcmc
 #find a reasonable place to initialize parameters
-sim1 <- simulate.sir(N,beta,gammar,I,T+max.time + 1,max.time,theta,p,T0)
+sim1 <- simulate.sir(N, beta, gammar, I, T + max.time + 1, max.time, theta, p, T0)
 sim1$Ds
 plot(sim1$Ds[1:T])
-plot(sim1$Ds[1:T], Ds, xlim=c(0,max(sim1$Ds[1:T], Ds)), ylim=c(0,max(sim1$Ds[1:T], Ds)))
+plot(sim1$Ds[1:T], Ds, 
+     xlim=c(0,max(sim1$Ds[1:T], Ds)), 
+     ylim=c(0, max(sim1$Ds[1:T], Ds)))
 abline(0,1)
 
 
@@ -182,13 +184,13 @@ for (k in 1:n.cases) {
                                                       theta,
                                                       p,
                                                       ceiling(x[3]))})
-
+  
   #extract samples of deaths
   tmp01 <- sapply(tmp1, function(x){return(x$Ds[1:(T + n.days.future)])})
   tmp02 <- sapply(tmp2, function(x){return(x$Ds[1:(T + n.days.future)])})
   big.Ds[,,k] <- (tmp01 * (T0.thinned - floor(T0.thinned))
                   + tmp02 * (ceiling(T0.thinned) - T0.thinned))
-
+  
   #extract Nus
   tmp01 <- sapply(tmp1, function(x){return(x$Nus)})
   tmp02 <- sapply(tmp2, function(x){return(x$Nus)})

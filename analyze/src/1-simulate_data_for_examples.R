@@ -15,11 +15,11 @@ if (!require('pacman')) {install.packages('pacman')}
 p_load(ggplot2, tidyr, stringr, dplyr)
 stopifnot(str_ends(getwd(), "Covid19-modeling/analyze"))
 
-files <- list(funcs=here::here("analyze/src/functions.R"),
+files <- list(functionss=here::here("analyze/src/functions.R"),
               theta=here::here("analyze/output/theta.Rds"),
-              output=here::here("output/example_realization.png"))
-source(files$funcs)
+              output=here::here("analyze/output/example_realization.png"))
 
+source(files$functions)
 
 #set some parameters for simulated example figures
 beta <- 0.2 # infection parameter
@@ -28,7 +28,7 @@ N <- 1000000 # pop size
 I <- 1 # initial number of infected
 
 theta <- readRDS(files$theta)
-max.time <- length(theta)-1 # max number of days to die given death
+max.time <- length(theta) - 1 # max number of days to die given death
 
 p <- 0.01 # set case fatality rate
 T <- 300 # number days in the simulation

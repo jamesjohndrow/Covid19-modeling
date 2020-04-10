@@ -7,6 +7,7 @@
 # Covid19-modeling/analyze/Makefile
 # -----------------------------------------------------------
 #
+
 .PHONY: all clean
 
 all: output/example_realization.png \
@@ -15,9 +16,9 @@ all: output/example_realization.png \
 	output/bigNus_0.01.RData
 
 clean:
-	rm output/*
+	-rm output/*
 
-STEP_3 :=
+STEP_3 := \
 		output/trace_plots_fractional_us_0.01.png \
 		output/post_hists_fractional_us_0.01.png \
 		output/num_deaths_cases_fractional_us_0.01.png \
@@ -35,8 +36,8 @@ output/example_realization.png: \
 	Rscript --vanilla $<
 
 output/mcmc_run_0.01.RData output/bigDs_0.01.RData output/bigNus_0.01.RData: \
-		src/2-fit_model_to_real_data.R \
-		src/functions.R \
+		src/2a-fit_model_to_real_data_faster.R \
+		src/functions_faster.R \
 		output/theta.Rds \
 		input/country_pops.RData \
 		input/worldcounts_deaths_us.csv
@@ -44,7 +45,7 @@ output/mcmc_run_0.01.RData output/bigDs_0.01.RData output/bigNus_0.01.RData: \
 
 $(STEP_3): \
 		src/3-make_figures.R \
-		src/functions.R \
+		src/functions_faster.R \
 		output/theta.Rds \
 		input/country_pops.RData \
 		input/worldcounts_deaths_us.csv \

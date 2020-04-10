@@ -3,7 +3,7 @@
 # Maintainers: JJ, PB, MG
 # Copyright:
 # =========================================
-# Covid19-modeling/analyze/src/2-fit_model_to_real_data.R
+# Covid19-modeling/analyze/src/3-make_figures.R
 
 #simulate data for testing code
 if (!require('pacman')) {install.packages('pacman')}
@@ -11,7 +11,7 @@ pacman::p_load(ggplot2, dplyr, tidyr, readr, lubridate,
                glue, future, future.apply, reshape2, argparse, here)
 
 parser <- ArgumentParser()
-parser$add_argument('--functions', default=here::here('analyze/src/functions.R'))
+parser$add_argument('--functions', default=here::here('analyze/src/functions_faster.R'))
 parser$add_argument('--theta', default=here::here('analyze/output/theta.Rds'))
 parser$add_argument('--pops', default=here::here('analyze/input/country_pops.RData'))
 parser$add_argument('--worldometers', default=here::here('analyze/input/worldcounts_deaths_us.csv'))
@@ -32,7 +32,6 @@ args[['R0']] <- here::here(glue('analyze/output/R0_fractional_{args$country}_{ar
 args[['infected_10']] <- here::here(glue('analyze/output/infected_10_days_ago_fractional_{args$country}_{args$p}.png'))
 args[['newly_infected_10']] <- here::here(glue('analyze/output/newly_infected_10_days_ago_fractional_{args$country}_{args$p}.png'))
 args[['time_to_recovery']] <- here::here(glue('analyze/output/time_to_recovery_fractional_{args$country}_{args$p}.png'))
-
 
 source(args$functions)
 
@@ -199,9 +198,9 @@ df.Nus$R0 <- factor(df.Nus$R0)
 #plot future new infections under different scenarios for reductions in R0
 png(args$num_newly_infected, width=600, height=400)
 ggplot(df.Nus %>% filter(
-						 (day > date("2020-03-20") - days.since.mitigation &
-						  day <= date("2020-03-29") + n.days.future)),
-       aes(x=day, y=log10(value+1), col=R0)) +
+  (day > date("2020-03-20") - days.since.mitigation &
+     day <= date("2020-03-29") + n.days.future)),
+  aes(x=day, y=log10(value+1), col=R0)) +
   geom_line() +
   theme_bw() +
   theme(text=element_text(size=24)) +
