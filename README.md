@@ -10,5 +10,6 @@ And the goals:
 
 > The goal of this work is not to provide specific forecasts of the infected population and likely deaths, although our initial estimates here fit the observed patterns of deaths. Accurate forecasts will require location-specific measures of containment and treatment efficacy, as well as age- and comorbidity-specific infected fatality rates. We don’t have these data at present, but our model could incorporate them as better information becomes available. Our paper offers a modeling approach using minimal but probably-good data, describes a likelihood and priors, is fitted to data, and is underpinned by a widely-used epidemiological model that is designed to approximate the real dynamics of disease spread.
 
+**NOTE:** this repository requires [git lfs](https://git-lfs.github.com/), which should be installed _prior_ to cloning this repository onto your machine.
 
 <!-- done --> 
