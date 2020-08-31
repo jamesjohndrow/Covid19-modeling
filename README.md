@@ -1,15 +1,7 @@
-# Covid19-modeling
+# Estimating the number of SARS-CoV-2 infections and the impact of mitigation policies in the United States
 
-This repository contains data, code, and LaTeX files for the paper "Estimating SARS-CoV-2-positive Americans using deaths-only data" on [arXiv](https://arxiv.org/abs/2004.02605) by James E. Johndrow, Kristian Lum, Maria Gargiulo, and Patrick Ball. 
+This repository contains R and Matlab code for ["Estimating the number of SARS-CoV-2 infections and the impact of mitigation policies in the United States"](LINK HERE) by James Johndrow, Patrick Ball, Maria Gargiulo, and Kristian Lum, forthcoming in the [Harvard Data Science Review](https://hdsr.mitpress.mit.edu/).
 
-The abstract:
-
-> We fit a Bayesian model to data on the number of deaths attributable to COVID-19 with the goal of estimating the number of infected individuals. Our model links an underlying Susceptible Infectious Removed (SIR) model of disease dynamics to observed deaths via a time-to-death distribution informed by previous studies. This allows us to actually fit a statistical model to the data, unlike many epidemiological studies in which the SIR model parameters are simply "calibrated" to obtain outputs that look similar to the real data. The main outputs of our model are estimates of the number of infections currently, as well as forecasts of the number of infections and deaths under various scenarios for the effectiveness of social distancing measures. All of our outputs have attached Bayesian credible intervals. An important conclusion is that the confirmed case counts greatly underestimate the total number of infected individuals.
-
-And the goals:
-
-> The goal of this work is not to provide specific forecasts of the infected population and likely deaths, although our initial estimates here fit the observed patterns of deaths. Accurate forecasts will require location-specific measures of containment and treatment efficacy, as well as age- and comorbidity-specific infected fatality rates. We don’t have these data at present, but our model could incorporate them as better information becomes available. Our paper offers a modeling approach using minimal but probably-good data, describes a likelihood and priors, is fitted to data, and is underpinned by a widely-used epidemiological model that is designed to approximate the real dynamics of disease spread.
-
-**NOTE:** this repository requires [git lfs](https://git-lfs.github.com/), which should be installed _prior_ to cloning this repository onto your machine.
-
-<!-- done --> 
+> **Abstract**: Knowledge of the number of individuals who have been infected with the novel coronavirus SARS-CoV-2 and the extent to which attempts for mitigation by executive order have been effective at limiting its spread are critical for effective policy going forward. Directly assessing prevalence and policy effects is complicated by the fact that case counts are unreliable. In this paper, we present a model for using death-only data---in our opinion, the most stable and reliable source of COVID-19 information---to estimate the underlying epidemic curves. Our model links observed deaths to an SIR model of disease spread via a likelihood that accounts for the lag in time from infection to death and the infection fatality rate. We present estimates of the extent to which confirmed cases in the United States undercount the true number of infections, and analyze how effective social distancing orders have been at mitigating or suppressing the virus. We provide analysis for four states with significant epidemics: California, Florida, New York, and Washington.
+>
+> **Keywords**: COVID-19, SARS-CoV-2, compartmental model, SIR model, Bayesian
