@@ -9,8 +9,8 @@ This repository contains R and Matlab code for "Estimating the number of SARS-Co
 **Note:** this repository requires [git lfs](https://git-lfs.github.com/)
 
 ### Some brief notes
-    * We use Matlab to fit our model because of the strengths of Matlab's ODE solver. We understand that not everyone has access to Matlab, so we provide the results of one run (the one this paper is based on) in `main-analysis/frozen` and reference those result files in steps 3-6.
-    * Everything except step 2 (the piece written in Matlab) can be executed sequentially via `make`.
-    * The code will also run interactively from RStudio as long as the working directory is correctly set (and there's a unit test that will fail if it's not).
+* We use Matlab to fit our model because of the strengths of Matlab's ODE solver. We understand that not everyone has access to Matlab, so we provide the results of one run (the one this paper is based on) in `main-analysis/frozen` and reference those result files in steps 3-6.
+* Everything except step 2 (the piece written in Matlab) can be executed sequentially via `make`.
+* The code will also run interactively from RStudio as long as the working directory is correctly set (and there's a unit test that will fail if it's not).
 
 <!-- done. -->
